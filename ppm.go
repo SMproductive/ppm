@@ -39,6 +39,7 @@ func main() {
 
 	err = extract(dataPath, key[:])
 	if err != nil {
+		fmt.Println("Right password?")
 		log.Fatal(err)
 	}
 	switch os.Args[2] {
@@ -111,7 +112,8 @@ func handlePipe(pipe string) error {
 	var err error
 	var account []byte
 	var accountStr string
-	for i := 0; i < 6; {
+	/* Equals 3 passwords with the example cliente */
+	for i := 0; i < 6; i++ {
 		account, err = ioutil.ReadFile(pipe)
 		accountStr = strings.Replace(string(account), "\n", "", -1)
 		if err != nil {
@@ -271,22 +273,17 @@ func list() string {
 
 /* Extract data from file */
 func extract(dataPath string, key []byte) error {
-	/* Decryption of database */
-	cipherText, err := ioutil.ReadFile(dataPath)
-	if err == nil {
+	if !checkFileNotExists(dataPath) {
+		cipherText, err := ioutil.ReadFile(dataPath)
+		if err != nil {
+			return err
+		}
 		jsonData, err := dec(key[:], cipherText)
 		if err != nil {
 			return err
 		}
 		err = json.Unmarshal(jsonData, &accounts)
 		if err != nil {
-			return err
-		}
-	} else {
-		noFileErr := "open " + dataPath + ": no such file or directory"
-		if fmt.Sprint(err) == noFileErr {
-			return nil
-		} else {
 			return err
 		}
 	}
