@@ -1,7 +1,5 @@
-/* TODO
- * Export function
- * Import function
- * Timers for security
+/*
+ * TODO Refactor variables
  */
 package main
 
@@ -33,17 +31,26 @@ func main() {
 	dataPath := os.Args[1]
 	accounts = make(map[string]string)
 
-	password := getPass()
+	password, err := getPass()
+	if err != nil {
+		log.Fatal(err)
+	}
 	key := sha256.Sum256([]byte(password))
 
-	err := extract(dataPath, key[:])
+	err = extract(dataPath, key[:])
 	if err != nil {
 		log.Fatal(err)
 	}
 	switch os.Args[2] {
 	case "set":
-		set(os.Args[3])
-		save(os.Args[1], key[:])
+		err := set(os.Args[3])
+		if err != nil {
+			log.Fatal(err)
+		}
+		err = save(os.Args[1], key[:])
+		if err != nil {
+			log.Fatal(err)
+		}
 	case "get":
 		fmt.Println(get(os.Args[3]))
 	case "gen":
@@ -51,33 +58,60 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		gen(os.Args[3], len)
-		save(os.Args[1], key[:])
+		err = gen(os.Args[3], len)
+		if err != nil {
+			log.Fatal(err)
+		}
+		err = save(os.Args[1], key[:])
+		if err != nil {
+			log.Fatal(err)
+		}
 	case "exp":
-		exp()
+		err := exp()
+		if err != nil {
+			log.Fatal(err)
+		}
 	case "imp":
-		imp()
+		err := imp(dataPath, key[:])
+		if err != nil {
+			log.Fatal(err)
+		}
 	case "list":
 		fmt.Print(list())
 	case "pipe":
 		/* Set default pipe path */
-		pipe, _ := os.UserHomeDir()
+		pipe, err := os.UserHomeDir()
+		if err != nil {
+			log.Fatal(err)
+		}
 		pipe += "/.ppm"
-		os.Mkdir(pipe, 0777)
+		if checkFileNotExists(pipe) {
+			err = os.Mkdir(pipe, 0777)
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
 		pipe += "/pipe"
 		/* Create named pipe */
-		out := exec.Command("mkfifo", pipe)
-		out.Run()
-
-		handlePipe(pipe)
+		if checkFileNotExists(pipe) {
+			out := exec.Command("mkfifo", pipe)
+			err = out.Run()
+			if err != nil {
+				log.Println(out.Run())
+			}
+		}
+		err = handlePipe(pipe)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 }
 
 func handlePipe(pipe string) error {
+	var err error
 	var account []byte
 	var accountStr string
-	var err error
-	for {
+	for i := 0; i < 6; {
 		account, err = ioutil.ReadFile(pipe)
 		accountStr = strings.Replace(string(account), "\n", "", -1)
 		if err != nil {
@@ -95,16 +129,16 @@ func handlePipe(pipe string) error {
 
 /* Encryption */
 /* Prompts for the master password */
-func getPass() string {
+func getPass() (string, error) {
 	prompt := promptui.Prompt{
 		Label: "Enter Master Password: ",
 		Mask:  '+',
 	}
 	pass, err := prompt.Run()
 	if err != nil {
-		log.Fatal("Can't read master password!")
+		return "", err
 	}
-	return pass
+	return pass, err
 }
 
 /* Encrypts a byte array */
@@ -116,7 +150,10 @@ func enc(key, plainText []byte) ([]byte, error) {
 	cipherText := make([]byte, len(plainText)+block.BlockSize())
 
 	iv := cipherText[:block.BlockSize()]
-	rand.Read(iv)
+	_, err = rand.Read(iv)
+	if err != nil {
+		return nil, err
+	}
 
 	encrypter := cipher.NewCFBEncrypter(block, iv)
 	encrypter.XORKeyStream(cipherText[block.BlockSize():], plainText)
@@ -142,9 +179,17 @@ func dec(key, cipherText []byte) ([]byte, error) {
 
 /* Account specific */
 /* Sets account data */
-func set(account string) {
+func set(account string) error {
+	var err error
+	if err != nil {
+		return err
+	}
 	fmt.Println("Give the password here: ")
-	accounts[account] = getPass()
+	accounts[account], err = getPass()
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 /* Prints account data */
@@ -153,7 +198,7 @@ func get(account string) string {
 }
 
 /* Generates random account data */
-func gen(account string, length int) {
+func gen(account string, length int) error {
 	word := ""
 	/* make default ascii list */
 	var ascii string
@@ -162,7 +207,10 @@ func gen(account string, length int) {
 	}
 	/* make nice random string */
 	seedSlice := make([]byte, 8)
-	rand.Read(seedSlice)
+	_, err := rand.Read(seedSlice)
+	if err != nil {
+		return err
+	}
 	var seed int64
 	for i, v := range seedSlice {
 		seed += int64(v << i * 8)
@@ -171,24 +219,45 @@ func gen(account string, length int) {
 
 	skip := make([]byte, 1)
 	for i := 0; i < length; i++ {
-		rand.Read(skip)
+		_, err = rand.Read(skip)
+		if err != nil {
+			return err
+		}
 		for k := byte(0); k < skip[0]; k++ {
 			mrand.Int()
 		}
 		word += string(ascii[mrand.Int()%len(ascii)])
 	}
 	accounts[account] = word
+	return nil
 }
 
 /* For complete data set */
 /* Prints all data as plain text */
-func exp() {
-
+func exp() error {
+	jsonData, err := json.Marshal(accounts)
+	if err != nil {
+		return err
+	}
+	fmt.Print(string(jsonData))
+	fmt.Println()
+	return nil
 }
 
 /* Imports plain text into specified file (if exists adds and overwrites it) */
-func imp() {
-
+func imp(dataPath string, key []byte) error {
+	var impData string
+	var impAccounts map[string]string
+	fmt.Scan(&impData)
+	err := json.Unmarshal([]byte(impData), &impAccounts)
+	if err != nil {
+		return err
+	}
+	for k, v := range impAccounts {
+		accounts[k] = v
+	}
+	save(dataPath, key[:])
+	return nil
 }
 
 /* Prints a list of all accounts */
@@ -231,7 +300,6 @@ func save(dataPath string, key []byte) error {
 			delete(accounts, k)
 		}
 	}
-
 	jsonData, err := json.Marshal(accounts)
 	if err != nil {
 		return err
@@ -240,6 +308,15 @@ func save(dataPath string, key []byte) error {
 	if err != nil {
 		return err
 	}
-	ioutil.WriteFile(dataPath, cipherText, 0660)
+	err = ioutil.WriteFile(dataPath, cipherText, 0660)
+	if err != nil {
+		return err
+	}
 	return nil
+}
+
+/* Return true if file does not exist */
+func checkFileNotExists(filePath string) bool {
+	_, err := os.Stat(filePath)
+	return os.IsNotExist(err)
 }
