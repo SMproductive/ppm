@@ -1,5 +1,5 @@
 /*
- * TODO Refactor variables
+ * TODO Refactor
  */
 package main
 
@@ -31,6 +31,7 @@ func main() {
 	dataPath := os.Args[1]
 	accounts = make(map[string]string)
 
+	fmt.Println("Master password")
 	password, err := getPass()
 	if err != nil {
 		log.Fatal(err)
@@ -113,7 +114,7 @@ func handlePipe(pipe string) error {
 	var account []byte
 	var accountStr string
 	/* Equals 3 passwords with the example cliente */
-	for i := 0; i < 6; i++ {
+	for {
 		account, err = ioutil.ReadFile(pipe)
 		accountStr = strings.Replace(string(account), "\n", "", -1)
 		if err != nil {
@@ -130,10 +131,10 @@ func handlePipe(pipe string) error {
 }
 
 /* Encryption */
-/* Prompts for the master password */
+/* Non echoing prompt */
 func getPass() (string, error) {
 	prompt := promptui.Prompt{
-		Label: "Enter Master Password: ",
+		Label: "Enter",
 		Mask:  '+',
 	}
 	pass, err := prompt.Run()
@@ -186,7 +187,7 @@ func set(account string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println("Give the password here: ")
+	fmt.Println()
 	accounts[account], err = getPass()
 	if err != nil {
 		return err
