@@ -1,0 +1,6 @@
+#!/bin/sh
+## An example of usage with bemenu on wayland
+echo list > .ppm/pipe
+b=$(cat .ppm/pipe | bemenu --hf '#EBCB8B' --hb '#3B4252' --nb '#2E3440' --nf '#ECEFF4' --tb '#2E3440' --tf '#ECEFF4' -H 31 --fn JetBrainsMono)
+echo $b > .ppm/pipe
+cat .ppm/pipe | wl-copy
