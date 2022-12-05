@@ -59,7 +59,6 @@ func main() {
 		imp()
 	case "list":
 		fmt.Print(list())
-		fmt.Println([]byte(list()))
 	case "pipe":
 		/* Set default pipe path */
 		pipe, _ := os.UserHomeDir()
@@ -81,7 +80,6 @@ func handlePipe(pipe string) error {
 	for {
 		account, err = ioutil.ReadFile(pipe)
 		accountStr = strings.Replace(string(account), "\n", "", -1)
-		fmt.Println(accountStr)
 		if err != nil {
 			return err
 		}
