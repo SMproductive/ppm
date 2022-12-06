@@ -15,6 +15,7 @@ import (
 	mrand "math/rand"
 	"os"
 	"os/exec"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -265,11 +266,16 @@ func imp(dataPath string, key []byte) error {
 
 /* Prints a list of all accounts */
 func list() string {
-	var str string
+	var strRand []string
+	var strSorted string
 	for k := range accounts {
-		str += k + "\n"
+		strRand = append(strRand, k+"\n")
 	}
-	return str
+	sort.Strings(strRand)
+	for _, v := range strRand {
+		strSorted += v
+	}
+	return strSorted
 }
 
 /* Extract data from file */
