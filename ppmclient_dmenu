@@ -1,0 +1,6 @@
+#!/bin/sh
+## An example of usage with bemenu on wayland
+echo list > .ppm/pipe
+b=$(cat .ppm/pipe | dmenu -nb '#2E3440' -nf '#ECEFF4' -sb '#2E3440' -sf '#ECEFF4' -fn "JetBrainsMono:size=14")
+echo $b > .ppm/pipe
+cat .ppm/pipe | xclip -selection clipboard
