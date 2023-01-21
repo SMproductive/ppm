@@ -1,0 +1,38 @@
+#+title: Piping Password Manager
+
+* Warning!
+- No error handling
+- Security depends on *your* password
+
+* Design
+- Database: Json
+- Encryption: AES256 in CFB mode
+- Command line interface
+
+* Usage
+ppm file action [name] [parameter]
+
+** actions
+- set
+  - Sets a string stored in name
+- get
+  - Prints a string stored in name
+- gen
+  - Generates a string stored in name
+- exp
+  - Exports the json to stdout
+- imp
+  - Imports the json from stdin
+- list
+  - Lists all possible name options
+- pipe
+  - Starts a named pipe under ~/.ppm/pipe
+  - Actions in the pipe:
+    - list:
+      - Writes a list of all possible name options to the pipe
+    - [name]:
+      - Writes the string stored in [name] back to the pipe
+
+* Additional notice
+- There are two shell scripts for usage as a client one using dmenu one using bemenu
+- *Feel free to create your own client application*
