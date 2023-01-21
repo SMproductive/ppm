@@ -29,7 +29,7 @@ ppm file action [name] [parameter]
   - Starts a named pipe under ~/.ppm/pipe
   - Actions in the pipe:
     - list:
-      - Writes a list of all possible name options to the pipe
+      - Writes a list of all possible name options back to the pipe
     - [name]:
       - Writes the string stored in [name] back to the pipe
 
