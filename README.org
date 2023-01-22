@@ -7,6 +7,7 @@
 * Design
 - Database: Json
 - Encryption: AES256 in CFB mode
+- Key generation: password -> SHA256 -> key
 - Command line interface
 
 * Usage
