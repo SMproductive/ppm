@@ -23,6 +23,7 @@ ppm file action [name] [parameter]
   - Exports the json to stdout
 - imp
   - Imports the json from stdin
+  - *Note* the string must not contain spaces (" ") and new line characters ("\n")
 - list
   - Lists all possible name options
 - pipe
