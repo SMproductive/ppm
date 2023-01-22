@@ -20,6 +20,7 @@ ppm file action [name] [parameter]
   - Prints a string stored in name
 - gen
   - Generates a string stored in name
+  - Parameter: length
 - exp
   - Exports the json to stdout
 - imp
